@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class SimpleProducer {
+public class SimpleProducerCallback {
     public static  final Logger logger = LoggerFactory.getLogger(SimpleProducerSync.class);
     public static void main(String[] args) {
 
@@ -31,10 +31,20 @@ public class SimpleProducer {
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(props);
 
         //ProducerRecord Object Create
-        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, "hello world2");
+        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, "hello world3");
 
         //KafkaProducer Message Send
-        kafkaProducer.send(producerRecord);
+        kafkaProducer.send(producerRecord, (m, e) -> {
+            if(e == null){
+                logger.info("\n ######callback########## record metadata received ####" +
+                        "\n" + "partition : " + m.partition() +
+                        "\n" + "offset : " + m.offset() +
+                        "\n" + "timestamp : " + m.timestamp()
+                );
+            }else{
+                e.printStackTrace();
+            }
+        });
 
         kafkaProducer.flush();
         kafkaProducer.close();
