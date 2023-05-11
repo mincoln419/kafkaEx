@@ -25,7 +25,7 @@ public class PizzaProducer {
         //KafkaProducer Object Create
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(props);
 
-        sendPizzaMessage(topicName, kafkaProducer, 100 , 500 , 1000, 5, true);
+        sendPizzaMessage(topicName, kafkaProducer, 10 , 500 , 1000, 5, false);
 
         finish(kafkaProducer);
     }
@@ -94,6 +94,10 @@ public class PizzaProducer {
         props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.145.129:9092");
         props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.setProperty(ProducerConfig.ACKS_CONFIG, "0");
+        props.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, "32000");
+        props.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+
         return props;
     }
 
