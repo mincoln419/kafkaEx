@@ -14,18 +14,18 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
-public class PizzaProducer {
-    public static  final Logger logger = LoggerFactory.getLogger(PizzaProducer.class);
+public class PizzaProducerCustomPartitioner {
+    public static  final Logger logger = LoggerFactory.getLogger(PizzaProducerCustomPartitioner.class);
     public static void main(String[] args) {
 
-        String topicName = "pizza-topic";
+        String topicName = "pizza-topic-partitioner";
 
         Properties props = getProperties();
 
         //KafkaProducer Object Create
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(props);
 
-        sendPizzaMessage(topicName, kafkaProducer, 100 , 500 , 1000, 5, false);
+        sendPizzaMessage(topicName, kafkaProducer, -1 , 100 , 0, 0, true);
 
         finish(kafkaProducer);
     }
@@ -96,10 +96,8 @@ public class PizzaProducer {
         props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 //        props.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "6"); //5 이상이면 idempotence 로 가지 않는다.
 //        props.setProperty(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "50000");
-        props.setProperty(ProducerConfig.ACKS_CONFIG, "all");
-        props.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-//        props.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, "32000");
-//        props.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+        props.setProperty("custom.specialKey", "P001");
+        props.setProperty(ProducerConfig.PARTITIONER_CLASS_CONFIG, "com.example.kafka.pizza.partitioner.CustomPartitioner");
 
         return props;
     }
