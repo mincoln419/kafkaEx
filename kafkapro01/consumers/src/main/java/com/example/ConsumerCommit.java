@@ -1,9 +1,6 @@
 package com.example;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
@@ -26,8 +23,8 @@ public class ConsumerCommit {
         props.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "group-03");
-        props.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-        props.setProperty(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "3000");
+        props.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+//        props.setProperty(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "3000");
 
         KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(props);
         kafkaConsumer.subscribe(List.of(topicName));
@@ -48,10 +45,44 @@ public class ConsumerCommit {
         });
 
 
+        //pollAutoCommit(kafkaConsumer);
 
+        pollCommitSync(kafkaConsumer);
+    }
 
-        
-        pollAutoCommit(kafkaConsumer);
+    public static void pollCommitSync(KafkaConsumer<String, String> kafkaConsumer) {
+
+        int loopCnt = 0;
+
+        try{
+
+            while(true){
+                ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofMillis(1000L));
+                logger.info("##### loopCnt : {} consumerRecords count : {}", loopCnt++, consumerRecords.count());
+
+                for(ConsumerRecord<String, String> record : consumerRecords){
+                    logger.info("key : {}, record value: {}, partition : {}, record-offset ; {}"
+                            , record.key(), record.value(), record.partition(), record.offset());
+                }
+
+                try{
+                    if(consumerRecords.count() > 0){
+                        kafkaConsumer.commitSync();
+                        logger.info("kafka consumer sync commit!");
+                    }
+                }catch(CommitFailedException e){
+                    logger.error(e.getMessage());
+                }
+
+            }
+        }catch (WakeupException e){
+            logger.error("wakeup exception has been called");
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }finally {
+            logger.info("finally consumer is closing");
+            kafkaConsumer.close();
+        }
     }
 
     public static void pollAutoCommit(KafkaConsumer<String, String> kafkaConsumer) {
