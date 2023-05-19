@@ -17,10 +17,10 @@ public class FileEventSource implements Runnable{
     private File file;
     private EventHandler eventHandler;
 
-    public FileEventSource(File file, long filePointer, EventHandler eventHandler) {
+    public FileEventSource(File file, EventHandler eventHandler, int updateInterval) {
         this.file = file;
-        this.filePointer = filePointer;
         this.eventHandler = eventHandler;
+        this.updateInterval = updateInterval;
     }
 
     @Override
@@ -30,10 +30,10 @@ public class FileEventSource implements Runnable{
                 Thread.sleep(this.updateInterval);
                 //파일 크기 계산
                 long len = this.file.length();
-
+                logger.info("len:{}", len);
                 if(len < this.filePointer){
                     logger.info("file was reset as filePointer is longer than file length");
-                    filePointer = len;
+                    this.filePointer = len;
                 }else if(len > this.filePointer){
                     readAppendAndSend();
                 }else{
@@ -65,21 +65,17 @@ public class FileEventSource implements Runnable{
 
         final String delimiter = ",";
 
-        while (line != null) {
-            StringTokenizer st = new StringTokenizer(line, delimiter);
-            String key = st.nextToken();
-            StringBuffer value = new StringBuffer();
-            while (true) {
-                value.append(st.nextToken());
-                if (!st.hasMoreTokens()) {
-                    break;
-                }
-                value.append(delimiter);
+        StringTokenizer st = new StringTokenizer(line, delimiter);
+        String key = st.nextToken();
+        StringBuffer value = new StringBuffer();
+        while (true) {
+            value.append(st.nextToken());
+            if (!st.hasMoreTokens()) {
+                break;
             }
-            MessageEvent messageEvent = new MessageEvent(key, value.toString());
-            this.eventHandler.onMessage(messageEvent);
-
+            value.append(delimiter);
         }
-
+        MessageEvent messageEvent = new MessageEvent(key, value.toString());
+        this.eventHandler.onMessage(messageEvent);
     }
 }
