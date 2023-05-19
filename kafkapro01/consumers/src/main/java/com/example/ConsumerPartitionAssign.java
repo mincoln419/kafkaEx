@@ -1,18 +1,21 @@
 package com.example;
 
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
+import org.apache.kafka.common.internals.Topic;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-public class ConsumerCommit {
+public class ConsumerPartitionAssign {
 
-    public static  final Logger logger = LoggerFactory.getLogger(ConsumerCommit.class);
+    public static  final Logger logger = LoggerFactory.getLogger(ConsumerPartitionAssign.class);
 
     public static void main(String[] args) {
 
@@ -22,12 +25,14 @@ public class ConsumerCommit {
         props.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.145.129:9092");
         props.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "group-04");
+        props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "group-pizza-assign-seek");
         props.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 //        props.setProperty(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "3000");
 
         KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(props);
-        kafkaConsumer.subscribe(List.of(topicName));
+        TopicPartition topicPartition = new TopicPartition(topicName, 0);
+        //kafkaConsumer.subscribe(List.of(topicName));
+        kafkaConsumer.assign(Arrays.asList(topicPartition));
 
         //main thread get
         Thread mainThread = Thread.currentThread();
@@ -47,9 +52,9 @@ public class ConsumerCommit {
 
         //pollAutoCommit(kafkaConsumer);
 
-        //pollCommitSync(kafkaConsumer);
+        pollCommitSync(kafkaConsumer);
 
-        pollCommitAsync(kafkaConsumer);
+        //pollCommitAsync(kafkaConsumer);
     }
 
     private static void pollCommitAsync(KafkaConsumer<String, String> kafkaConsumer) {
