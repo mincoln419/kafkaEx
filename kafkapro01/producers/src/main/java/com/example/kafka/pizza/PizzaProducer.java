@@ -25,7 +25,7 @@ public class PizzaProducer {
         //KafkaProducer Object Create
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(props);
 
-        sendPizzaMessage(topicName, kafkaProducer, 100 , 500 , 1000, 5, false);
+        sendPizzaMessage(topicName, kafkaProducer, -1 , 1000 , 0, 0, true);
 
         finish(kafkaProducer);
     }
